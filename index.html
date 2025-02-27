@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sid Bot</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            background-color: white;
+            color: black;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+        }
+        .chat-container {
+            width: 50%;
+            margin: auto;
+            padding: 0;
+            position: relative;
+            text-align: left;
+            height: 80vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            background: none;
+        }
+        .user-message, .bot-message {
+            color: black;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            max-width: 80%;
+        }
+        .user-message {
+            background-color: #f1f1f1;
+            align-self: flex-end;
+            text-align: right;
+        }
+        .bot-message {
+            background-color: #e0e0e0;
+            align-self: flex-start;
+            text-align: left;
+        }
+        input[type="text"], button {
+            padding: 12px;
+            font-size: 14px;
+            border-radius: 10px;
+            border: none;
+            position: fixed;
+            bottom: 10px;
+            outline: none;
+        }
+        input[type="text"] {
+            width: 50%;
+            left: 25%;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            left: 78%;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sid Bot</h1>
+    <div class="chat-container" id="chat-box"></div>
+    <input type="text" id="user-input" placeholder="Type a message..." onkeypress="handleKeyPress(event)">
+    <button onclick="sendMessage()">Send</button>
+    <script>
+        const GEMINI_API_KEY = "AIzaSyDlIu7aPy7lEN_kHK3zdKcBumTmvI1EzjU"; // 🔴 REPLACE WITH YOUR ACTUAL KEY
+
+        async function sendMessage() {
+            let input = document.getElementById("user-input").value.trim();
+            let chatBox = document.getElementById("chat-box");
+            if (input === "") return;
+
+            let userMessage = `<div class='user-message'><span>You: ${input}</span></div>`;
+            chatBox.innerHTML += userMessage;
+            document.getElementById("user-input").value = "";
+
+            try {
+                let response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ contents: [{ parts: [{ text: input }] }] })
+                });
+                let data = await response.json();
+                let botReply = data.candidates?.[0]?.content?.parts?.[0]?.text || "I couldn't process your request.";
+
+                let botMessage = `<div class='bot-message'><span>Sid Bot: ${botReply}</span></div>`;
+                chatBox.innerHTML += botMessage;
+            } catch (error) {
+                console.error("Error:", error);
+                chatBox.innerHTML += `<div class='bot-message'><span>Sid Bot: Error connecting to AI.</span></div>`;
+            }
+            setTimeout(() => { chatBox.scrollTop = chatBox.scrollHeight; }, 10);
+        }
+        function handleKeyPress(event) {
+            if (event.key === "Enter") sendMessage();
+        }
+    </script>
+</body>
+</html>
